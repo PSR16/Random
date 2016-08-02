@@ -1,0 +1,67 @@
+from bs4 import BeautifulSoup
+import os
+#Opens HTML file
+def open_file(html_file):
+    soup = BeautifulSoup(open(html_file), "lxml")
+    return soup
+
+def getAnswers(html_file, answer):
+    answers = []
+    for ans in answer[1]:
+        answers.append(ans)
+    #Inserts all questions into a list
+
+    question = []
+    for li in html_file.findAll('li'):
+        question.append(li.get_text().strip())
+
+    questAns = []
+    listQA = []
+    for index, q in enumerate(question):
+        questAns.append(question[index])
+        questAns.append(answers[index])
+        listQA.append(questAns[0])
+        listQA.append(questAns[1])
+        questAns = []
+
+def toGIFT(html_file, outFile, quizName):
+    heading = html_file.find('h3').text.split("Key: ")
+    title = heading[0]
+    answers = []
+    for ans in heading[1]:
+        answers.append(ans)
+    getAnswers(html_file, heading)
+
+    #outFile.write("::" + title + "::")
+    index = 0
+    for li in html_file.findAll('li'):
+        name = li.get_text().strip()
+        outFile.write( "::" + quizName + "::" + name.encode('utf-8'))
+        outFile.write("{\n")
+        for ans in li.findAll('asp:listitem', {'text': True, 'value': True}):
+            if ans['value'] == answers[index]:
+                outFile.write("=" + ans['text'].encode('utf-8') + "\n")
+            else:
+                outFile.write("~" + ans['text'].encode('utf-8') + "\n")
+        outFile.write("} \n\n")
+        index = index + 1
+
+count = 0
+for file in os.listdir("C:\Users\Pegah\OneDrive\Programming\Work\Quizzes"):
+    if file.endswith(".html"):
+        print(file)
+        name= file.split(".")
+        outFileName = name[0]
+        htmlFile = open_file("C:\Users\Pegah\OneDrive\Programming\Work\Quizzes\\" + file)
+        moodleFile = open('C:\Users\Pegah\OneDrive\Programming\Work\outputQuizNew\\' + outFileName + '.txt', 'w')
+        quizName = file.split(".")
+        quizN = quizName[0]
+        quizN = quizN.encode('utf-8')
+        #quizName = quizName[1].split(".")
+        toGIFT(htmlFile, moodleFile, quizName[0])
+        moodleFile.close()
+        count += 1
+
+print(count)
+#file = "Quizzes/Lecture2Quiz3.html"
+
